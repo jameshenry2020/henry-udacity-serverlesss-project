@@ -57,11 +57,31 @@ custom:
     models:
       - name: CreateTodoRequest
         contentType: "application/json"
-        schema: ${file(models/create-Todo-model.json)}
-         
+        schema:
+          required:
+            - name
+            - dueDate
+          properties:
+            name:
+              minLength: 1
+              type: string
+            dueDate:
+              type: string
       - name: UpdateTodoRequest
         contentType: "application/json"
-        schema: ${file(models/update-todo-model.json)}   
+        schema:
+          required:
+            - name
+            - dueDate
+            - done
+          properties:
+            name:
+              minLength: 1
+              type: string
+            dueDate:
+              type: string
+            done:
+              type: boolean     
 
 
 
@@ -109,12 +129,13 @@ functions:
           path: todos
           cors: true
           authorizer: Auth
+          reqValidatorName: RequestBodyValidator
           documentation:
             summary: "Add a new todo item"
             description: "Create a new todo item"
             requestModels:
               "application/json": CreateTodoRequest
-          reqValidatorName: RequestBodyValidator
+          
     iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-create-todo-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
@@ -137,12 +158,13 @@ functions:
           path: todos/{todoId}
           cors: true
           authorizer: Auth
+          reqValidatorName: RequestBodyValidator
           documentation: 
             summary: 'to edit a todo item'
             description: 'update a todo item'
             requestModels: 
               'application/json': UpdateTodoRequest
-          reqValidatorName: RequestBodyValidator
+          
     iamRoleStatementsName: ${self:provider.environment.PROJECT_NAME}-update-todo-role-${self:provider.stage}
     iamRoleStatements:
       - Effect: Allow
@@ -199,6 +221,22 @@ functions:
 
 resources:
   Resources:
+    RequestBodyValidator:
+      Type: AWS::ApiGateway::RequestValidator
+      Properties:
+        Name: 'request-body-validator'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
+    onlyBody:
+      Type: "AWS::ApiGateway::RequestValidator"
+      Properties:
+        Name: 'only-body'
+        RestApiId:
+          Ref: ApiGatewayRestApi
+        ValidateRequestBody: true
+        ValidateRequestParameters: false
 
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
@@ -272,14 +310,7 @@ resources:
                 - HEAD
               MaxAge: 3000
 
-    RequestBodyValidator:
-        Type: AWS::ApiGateway::RequestValidator
-        Properties:
-          Name: 'request-body-validator'
-          RestApiId:
-            Ref: ApiGatewayRestApi
-          ValidateRequestBody: true
-          ValidateRequestParameters: false
+
 
     # TODO: Complete the policy below and attach it to the bucket defined above
     # For cross referencing the name of the bucket, use "!Ref AttachmentsBucket"

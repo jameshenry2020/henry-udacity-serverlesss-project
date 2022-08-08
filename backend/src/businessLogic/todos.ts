@@ -1,4 +1,4 @@
-import { TodosAccess } from './todosAcess'
+import { TodosAccess } from '../dataLayer/todosAcess'
 // import { AttachmentUtils } from './attachmentUtils';
 import { TodoItem } from '../models/TodoItem'
 import { TodoUpdate } from '../models/TodoUpdate';
@@ -21,16 +21,16 @@ export async function createTodos(
     createTodosRequest: CreateTodoRequest,
     jwtToken: string
   ): Promise<TodoItem> {
-    const itemId = uuidv4()
+    const todoId = uuidv4()
     const userId = parseUserId(jwtToken);
-    logger.info(itemId);
+    logger.info(todoId);
     const s3BucketName = process.env.ATTACHMENT_S3_BUCKET
   
     return await toDoAccess.createTodos({
       createdAt: new Date().toISOString(),
-      todoId: itemId,
+      todoId: todoId,
       userId: userId,
-      attachmentUrl: `https://${s3BucketName}.s3.amazonaws.com/${itemId}`,
+      attachmentUrl: `https://${s3BucketName}.s3.amazonaws.com/${todoId}`,
       done: false,
       ...createTodosRequest,
     })
